@@ -1,0 +1,46 @@
+require_relative '../node_modules/react-native/scripts/react_native_pods'
+require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
+
+platform :ios, '10.0'
+
+target 'WildDream' do
+  config = use_native_modules!
+
+  use_react_native!(:path => config["reactNativePath"])
+
+  target 'WildDreamTests' do
+    inherit! :complete
+    # Pods for testing
+  end
+
+  # Enables Flipper.
+  #
+  # Note that if you have use_frameworks! enabled, Flipper will not work and
+  # you should disable these next few lines.
+  use_flipper!({ 'Flipper' => '0.87.0' })
+  post_install do |installer|
+    flipper_post_install(installer)
+
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '9.0'
+      end
+     end
+  end
+end
+
+target 'WildDream-tvOS' do
+  # Pods for RnDiffApp-tvOS
+  target 'WildDream-tvOSTests' do
+    inherit! :search_paths
+    # Pods for testing
+  end
+end
+
+target 'ImageNotification' do
+  pod 'Firebase/Messaging', '~> 7.11.0' # eg 6.31.0
+end
+
+target 'XGExtension' do
+  pod 'TPNS-iOS-Extension'
+end
