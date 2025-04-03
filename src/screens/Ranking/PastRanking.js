@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import { StyleSheet, View, ScrollView, Modal } from 'react-native';
 import { connect } from 'react-redux';
-import { withTheme, Text } from 'react-native-paper';
+import { withTheme, Text, Button } from 'react-native-paper';
 import moment from 'moment';
 import camelCase from 'lodash.camelcase';
-import DatePicker from 'react-native-datepicker';
+// import DatePicker from 'react-native-datepicker';
+import DatePicker from 'react-native-date-picker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import RankingList from './RankingList';
 import NovelRankingList from './NovelRankingList';
@@ -27,7 +28,7 @@ import {
 } from '../../common/constants';
 import { globalStyles, globalStyleVariables } from '../../styles';
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create( {
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -65,84 +66,138 @@ const styles = StyleSheet.create({
   bottomSheetCancelText: {
     marginLeft: 36,
   },
-  datePicker: {
+  datePickerContainer: {
     flex: 1,
     borderColor: 'gray',
     borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 5,
   },
-  dateInput: {
-    borderWidth: 0,
+  dateText: {
+    paddingHorizontal: 10,
   },
-  dateTouchBody: {
-    height: null,
+  datePickerModalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-});
+  datePickerModalContent: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  datePickerButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 20,
+  },
+} );
 
 class PastRanking extends Component {
-  constructor(props) {
-    super(props);
+  constructor( props ) {
+    super( props );
     const { rankingType } = props;
     let mode;
-    if (rankingType === RANKING_TYPES.ILLUST) {
+    if ( rankingType === RANKING_TYPES.ILLUST )
+    {
       this.ranking = RANKING_ILLUST;
       this.r18Ranking = R18_RANKING_ILLUST;
       this.r18GRanking = R18G_RANKING_ILLUST;
       mode = 'day';
-    } else if (rankingType === RANKING_TYPES.MANGA) {
+    } else if ( rankingType === RANKING_TYPES.MANGA )
+    {
       this.ranking = RANKING_MANGA;
       this.r18Ranking = R18_RANKING_MANGA;
       this.r18GRanking = R18G_RANKING_MANGA;
       mode = 'day_manga';
-    } else if (rankingType === RANKING_TYPES.NOVEL) {
+    } else if ( rankingType === RANKING_TYPES.NOVEL )
+    {
       this.ranking = RANKING_NOVEL;
       this.r18Ranking = R18_RANKING_NOVEL;
       this.r18GRanking = R18G_RANKING_NOVEL;
       mode = 'day';
     }
+
+    const twoDaysAgo = moment().subtract( 2, 'days' ).toDate();
+
     this.state = {
       isOpenRankingModeBottomSheet: false,
-      date: moment().subtract(2, 'days').format('YYYY-MM-DD'),
+      date: twoDaysAgo,
+      dateString: moment( twoDaysAgo ).format( 'YYYY-MM-DD' ),
       mode,
+      isDatePickerVisible: false,
     };
   }
 
   openRankingModeBottomSheet = () => {
-    this.setState({ isOpenRankingModeBottomSheet: true });
+    this.setState( { isOpenRankingModeBottomSheet: true } );
   };
 
   handleOnCancelRankingModeBottomSheet = () => {
-    this.setState({ isOpenRankingModeBottomSheet: false });
+    this.setState( { isOpenRankingModeBottomSheet: false } );
   };
 
-  handleOnPressRankingMode = (mode) => {
-    this.setState({ mode });
+  handleOnPressRankingMode = ( mode ) => {
+    this.setState( { mode } );
     this.handleOnCancelRankingModeBottomSheet();
   };
 
-  handleOnDateChange = (date) => {
-    this.setState({ date });
+  openDatePicker = () => {
+    this.setState( { isDatePickerVisible: true } );
   };
 
-  mapRankingString = (ranking) => {
+  closeDatePicker = () => {
+    this.setState( { isDatePickerVisible: false } );
+  };
+
+  handleOnDateChange = ( newDate ) => {
+    this.setState( {
+      date: newDate,
+    } );
+  };
+
+  confirmDate = () => {
+    this.setState( {
+      dateString: moment( this.state.date ).format( 'YYYY-MM-DD' ),
+      isDatePickerVisible: false,
+    } );
+  };
+
+  cancelDate = () => {
+    this.setState( {
+      isDatePickerVisible: false,
+    } );
+  };
+
+  mapRankingString = ( ranking ) => {
     const { i18n } = this.props;
-    return i18n[`ranking${ranking.charAt(0).toUpperCase() + ranking.slice(1)}`];
+    return i18n[ `ranking${ranking.charAt( 0 ).toUpperCase() + ranking.slice( 1 )}` ];
   };
 
-  renderRankingOptions = (ranking, rankingMode) => (
+  renderRankingOptions = ( ranking, rankingMode ) => (
     <PXBottomSheetButton
       key={ranking}
-      onPress={() => this.handleOnPressRankingMode(rankingMode)}
+      onPress={() => this.handleOnPressRankingMode( rankingMode )}
       iconName="md-funnel"
       iconType="ionicon"
-      text={this.mapRankingString(ranking)}
+      text={this.mapRankingString( ranking )}
     />
   );
 
   render() {
     const { user, i18n, route, rankingMode, rankingType, theme } = this.props;
-    const { date, mode, isOpenRankingModeBottomSheet } = this.state;
+    const { date, dateString, mode, isOpenRankingModeBottomSheet, isDatePickerVisible } = this.state;
     const selectedRankingMode =
-      rankingType === RANKING_TYPES.MANGA ? mode.replace('_manga', '') : mode;
+      rankingType === RANKING_TYPES.MANGA ? mode.replace( '_manga', '' ) : mode;
+
+    // Calculate min date (pixiv launch date) and max date (today)
+    const minDate = new Date( '2007-09-13' );
+    const maxDate = new Date();
+
     return (
       <View style={globalStyles.container}>
         <View style={styles.filterContainer}>
@@ -152,7 +207,7 @@ class PastRanking extends Component {
           >
             <View style={styles.rankingPicker}>
               <Text style={styles.rankingPickerText}>
-                {this.mapRankingString(camelCase(selectedRankingMode))}
+                {this.mapRankingString( camelCase( selectedRankingMode ) )}
               </Text>
               <Icon
                 name="caret-down"
@@ -162,45 +217,70 @@ class PastRanking extends Component {
               />
             </View>
           </PXTouchable>
-          <DatePicker
-            style={styles.datePicker}
-            customStyles={{
-              dateInput: styles.dateInput,
-              dateTouchBody: styles.dateTouchBody,
-              dateText: {
-                color: theme.colors.text,
-              },
-              btnTextConfirm: {
-                height: 20,
-                color: globalStyleVariables.PRIMARY_COLOR,
-              },
-              btnTextCancel: {
-                height: 20,
-                color: '#000',
-              },
-            }}
-            date={date}
-            mode="date"
-            placeholder="select date"
-            format="YYYY-MM-DD"
-            minDate="2007-09-13"
-            maxDate={new Date()}
-            confirmBtnText={i18n.ok}
-            cancelBtnText={i18n.cancel}
-            showIcon
-            onDateChange={this.handleOnDateChange}
-          />
+
+          <PXTouchable
+            style={styles.datePickerContainer}
+            onPress={this.openDatePicker}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={[ styles.dateText, { color: theme.colors.text } ]}>
+                {dateString}
+              </Text>
+              <Icon
+                name="calendar"
+                size={16}
+                color={theme.colors.text}
+                style={{ marginLeft: 10 }}
+              />
+            </View>
+          </PXTouchable>
+
+          <Modal
+            transparent
+            visible={isDatePickerVisible}
+            animationType="fade"
+          >
+            <View style={styles.datePickerModalContainer}>
+              <View style={styles.datePickerModalContent}>
+                <DatePicker
+                  date={date}
+                  mode="date"
+                  minimumDate={minDate}
+                  maximumDate={maxDate}
+                  onDateChange={this.handleOnDateChange}
+                  androidVariant="nativeAndroid"
+                  textColor="#000000"
+                />
+                <View style={styles.datePickerButtonContainer}>
+                  <Button
+                    onPress={this.cancelDate}
+                    mode="text"
+                  >
+                    {i18n.cancel}
+                  </Button>
+                  <Button
+                    onPress={this.confirmDate}
+                    mode="contained"
+                    color={globalStyleVariables.PRIMARY_COLOR}
+                  >
+                    {i18n.ok}
+                  </Button>
+                </View>
+              </View>
+            </View>
+          </Modal>
         </View>
+
         {rankingType === RANKING_TYPES.NOVEL ? (
           <NovelRankingList
             rankingMode={rankingMode}
-            options={{ date, mode }}
+            options={{ date: dateString, mode }}
             route={route}
           />
         ) : (
           <RankingList
             rankingMode={rankingMode}
-            options={{ date, mode }}
+            options={{ date: dateString, mode }}
             route={route}
           />
         )}
@@ -210,18 +290,18 @@ class PastRanking extends Component {
           onCancel={this.handleOnCancelRankingModeBottomSheet}
         >
           <ScrollView>
-            {Object.keys(this.ranking).map((ranking) =>
-              this.renderRankingOptions(ranking, this.ranking[ranking]),
+            {Object.keys( this.ranking ).map( ( ranking ) =>
+              this.renderRankingOptions( ranking, this.ranking[ ranking ] ),
             )}
             {user &&
               user.x_restrict > 0 &&
-              Object.keys(this.r18Ranking).map((ranking) =>
-                this.renderRankingOptions(ranking, this.r18Ranking[ranking]),
+              Object.keys( this.r18Ranking ).map( ( ranking ) =>
+                this.renderRankingOptions( ranking, this.r18Ranking[ ranking ] ),
               )}
             {user &&
               user.x_restrict > 1 &&
-              Object.keys(this.r18GRanking).map((ranking) =>
-                this.renderRankingOptions(ranking, this.r18GRanking[ranking]),
+              Object.keys( this.r18GRanking ).map( ( ranking ) =>
+                this.renderRankingOptions( ranking, this.r18GRanking[ ranking ] ),
               )}
             <PXBottomSheetCancelButton
               onPress={this.handleOnCancelRankingModeBottomSheet}
@@ -236,8 +316,8 @@ class PastRanking extends Component {
 
 export default withTheme(
   connectLocalization(
-    connect((state) => ({
+    connect( ( state ) => ( {
       user: state.auth.user,
-    }))(PastRanking),
+    } ) )( PastRanking ),
   ),
 );

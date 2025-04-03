@@ -5,18 +5,18 @@ import ViewPagerAdapter from 'react-native-tab-view-viewpager-adapter';
 import { useTheme } from 'react-native-paper';
 import { globalStyleVariables } from '../styles';
 
-const initialLayout = { width: Dimensions.get('window').width };
+const initialLayout = { width: Dimensions.get( 'window' ).width };
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create( {
   container: {
     flex: 1,
   },
   tabStyle: {
     width: 'auto',
   },
-});
+} );
 
-const PXTabView = ({
+const PXTabView = ( {
   navigationState,
   renderScene,
   onIndexChange,
@@ -26,12 +26,13 @@ const PXTabView = ({
   renderTabBar,
   lazyPreloadDistance,
   ...restProps
-}) => {
+} ) => {
   const theme = useTheme();
 
-  const handleRenderTabBar = (props) => {
-    if (renderTabBar) {
-      return renderTabBar(props);
+  const handleRenderTabBar = ( props ) => {
+    if ( renderTabBar )
+    {
+      return renderTabBar( props );
     }
     return (
       <TabBar
@@ -66,19 +67,19 @@ const PXTabView = ({
 
   return (
     <TabView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      style={[ styles.container, { backgroundColor: theme.colors.background } ]}
       navigationState={navigationState}
       renderScene={renderScene}
       onIndexChange={onIndexChange}
       initialLayout={initialLayout}
       renderTabBar={handleRenderTabBar}
       // eslint-disable-next-line react/jsx-props-no-spreading
-      {...(Platform.OS === 'android' && {
-        renderPager: (props) => {
-          // eslint-disable-next-line react/jsx-props-no-spreading
-          return <ViewPagerAdapter {...props} transition="scroll" />;
-        },
-      })}
+      // {...(Platform.OS === 'android' && {
+      //   renderPager: (props) => {
+      //     // eslint-disable-next-line react/jsx-props-no-spreading
+      //     return <ViewPagerAdapter {...props} transition="scroll" />;
+      //   },
+      // })}
       removeClippedSubviews={Platform.OS === 'android'}
       // renderPager={(props) => (
       //   // eslint-disable-next-line react/jsx-props-no-spreading
